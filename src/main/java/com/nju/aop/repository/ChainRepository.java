@@ -12,4 +12,6 @@ import java.util.List;
 public interface ChainRepository extends JpaRepository<Chain, Integer> {
 
     List<Chain> findByAopId(Integer aopId);
+
+    List<Chain> findByEventId(Integer eventId);
 }

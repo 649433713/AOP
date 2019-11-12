@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
 
 /**
  * @author yinywf
@@ -16,7 +17,7 @@ import javax.persistence.Id;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Chemical {
+public class Chemical implements Serializable {
     @Id
     @ExcelCell("序号")
     private Integer id;
