@@ -1,12 +1,17 @@
 package com.nju.aop.utils.excel;
 
 import com.nju.aop.dataobject.*;
+import com.nju.aop.dataobject.importTempVo.BioassayVO;
 import com.nju.aop.dataobject.importTempVo.CasEtc;
 import com.nju.aop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +23,7 @@ import java.util.stream.Collectors;
 @Component
 public class AopImportUtil {
 
-    public static final String FILE_PATH = "src/main/resources/AOP.xlsx";
+    public static final String FILE_PATH = "src/main/resources/AOP2.xlsx";
 
     @Autowired
     private AopRepository aopRepository;
@@ -49,6 +54,15 @@ public class AopImportUtil {
 
     @Autowired
     private ChemicalEventRepository chemicalEventRepository;
+
+    @Autowired
+    private BioassayRepository bioassayRepository;
+
+    @Autowired
+    private ToxRepository toxRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
 
     public void insertChains() throws Exception {
@@ -88,6 +102,51 @@ public class AopImportUtil {
             }
         }
         biodetectionRepository.saveAll(list);
+    }
+
+    public void insertBioassays() throws Exception {
+        List<BioassayVO> list = ExcelUtil.readExcelToEntity(BioassayVO.class, new FileInputStream(FILE_PATH), "AOP2.xlsx",3);
+        List<Bioassay> bioassayList = new ArrayList<>();
+        for (BioassayVO vo : list) {
+            if (vo.getBioassay1() != null) {
+                bioassayList.add(new Bioassay(0, vo.getEventId(), vo.getBioassay1(), vo.getEffect()));
+            }
+            if (vo.getBioassay2() != null) {
+                bioassayList.add(new Bioassay(0, vo.getEventId(), vo.getBioassay2(), vo.getEffect()));
+            }
+        }
+        bioassayRepository.saveAll(bioassayList);
+    }
+
+    public void insertToxes()throws Exception {
+        List<Tox> list = ExcelUtil.readExcelToEntity(Tox.class, new FileInputStream(FILE_PATH), "AOP2.xlsx",4);
+        list = list.stream().peek(tox -> {
+            while (tox.getBioassay().charAt(tox.getBioassay().length() - 1) == ',') {
+                tox.setBioassay(tox.getBioassay().substring(0, tox.getBioassay().length() - 1));
+            }
+        }).collect(Collectors.toList());
+
+        String sql = "insert into tox (ac50, assay_name, bioassay, casrn, chemical, effect, intended_target_family, tox_id) values (?, ?, ?, ?, ?, ?, ?, ?)";
+        List<Tox> finalList = list;
+        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
+                Tox tox = finalList.get(i);
+                preparedStatement.setDouble(1, tox.getAc50());
+                preparedStatement.setString(2,tox.getAssayName());
+                preparedStatement.setString(3,tox.getBioassay());
+                preparedStatement.setString(4,tox.getCasrn());
+                preparedStatement.setString(5,tox.getChemical());
+                preparedStatement.setString(6,tox.getEffect());
+                preparedStatement.setString(7,tox.getIntendedTargetFamily());
+                preparedStatement.setString(8,tox.getToxId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return finalList.size();
+            }
+        });
     }
 
     public void insertChemicals() throws Exception {
