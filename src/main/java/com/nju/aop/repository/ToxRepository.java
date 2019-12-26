@@ -2,6 +2,8 @@ package com.nju.aop.repository;
 
 
 import com.nju.aop.dataobject.Tox;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.List;
 public interface ToxRepository extends JpaRepository<Tox, Integer> {
 
     List<Tox> findByCasrn(String casrn);
+
+    Page<Tox> findByCasrnOrChemical(String casrn, String chemical, Pageable pageable);
 
     List<Tox> findByToxId(String toxId);
 
