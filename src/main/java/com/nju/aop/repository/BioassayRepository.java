@@ -17,4 +17,7 @@ public interface BioassayRepository extends JpaRepository<Bioassay, Integer> {
 
     List<Bioassay> findByEffect(String effect);
 
+    List<Bioassay> findByBioassayNameIn(List<String> bioassays);
+
+    List<Bioassay> findByBioassayNameInAndEffect(List<String> bioassays,String effect);
 }

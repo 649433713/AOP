@@ -108,8 +108,8 @@ public class TestController {
                 }
             }
         }
-        writeToFile(existAops, "existAops.txt");
-        writeToFile(notExistAops, "notExistAops.txt");
+        //writeToFile(existAops, "existAops.txt");
+        //writeToFile(notExistAops, "notExistAops.txt");
         System.out.println();
     }
 
@@ -156,20 +156,20 @@ public class TestController {
             }
         }
 
-        Iterator<String> iterator = traceList.iterator();
-        File file = new File("src/main/resources/AOP_v2.txt");
-        FileWriter fileWriter = new FileWriter(file);
-        while (iterator.hasNext()) {
-            String string = iterator.next();
-            if (!check(string, sourceEdgeMap)) {
-                System.out.println(string);
-                iterator.remove();
-            } else {
-                fileWriter.write(string);
-                fileWriter.write(System.getProperty("line.separator"));
-            }
-        }
-        fileWriter.close();
+//        Iterator<String> iterator = traceList.iterator();
+//        File file = new File("src/main/resources/AOP_v2.txt");
+//        FileWriter fileWriter = new FileWriter(file);
+//        while (iterator.hasNext()) {
+//            String string = iterator.next();
+//            if (!check(string, sourceEdgeMap)) {
+//                System.out.println(string);
+//                iterator.remove();
+//            } else {
+//                fileWriter.write(string);
+//                fileWriter.write(System.getProperty("line.separator"));
+//            }
+//        }
+//        fileWriter.close();
         System.out.println();
     }
 
@@ -185,7 +185,7 @@ public class TestController {
         }
         List<String> traceList = new ArrayList<>();
         for (Edge edge : edges) {
-            if (trace.contains(edge.getTargetId().toString())) {
+            if (exist(trace, edge.getTargetId().toString())) {
                 continue;
             }
             List<String> targetTrace = traceMap.get(edge.getTargetId()) != null ? traceMap.get(edge.getTargetId()) :
@@ -194,9 +194,7 @@ public class TestController {
                 traceList.add(source + "," + edge.getTargetId());
             } else {
                 for (String string : targetTrace) {
-                    if (!exist(string, source.toString())) {
-                        traceList.add(source + "," + string);
-                    }
+                    traceList.add(source + "," + string);
                 }
             }
         }
