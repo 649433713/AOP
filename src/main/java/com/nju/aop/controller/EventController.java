@@ -83,8 +83,10 @@ public class EventController {
             Set<Integer> aoIDs = new HashSet<>();
             List<Chain> chainsWithSameEID = chainRepository.findByEventId(keID);
             for(Chain chain:chainsWithSameEID) {
-                List<Chain> chainsInSameAOP = chainRepository.findByAopId(chain.getAopId());
-                aoIDs.add(chainsInSameAOP.get(chainsInSameAOP.size()-1).getEventId());
+                List<Chain> AOs = chainRepository.findByAopIdAndType(chain.getAopId(),"AdverseOutcome");
+                for(Chain ao: AOs) {
+                    aoIDs.add(ao.getEventId());
+                }
             }
 
             List<Event> AOs = new ArrayList<>();

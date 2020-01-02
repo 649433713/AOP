@@ -13,5 +13,7 @@ public interface ChainRepository extends JpaRepository<Chain, Integer> {
 
     List<Chain> findByAopId(Integer aopId);
 
+    List<Chain> findByAopIdAndType(Integer aopId, String type);
+
     List<Chain> findByEventId(Integer eventId);
 }
