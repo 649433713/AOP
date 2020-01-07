@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.*;
 
@@ -99,4 +100,21 @@ public class EventController {
         }
         return list;
     }
+
+    @GetMapping("/findAOsByQueryName")
+    public List<Event> findAOByQueryName(@RequestParam String queryName) {
+        Integer id = null;
+        Pattern pattern = Pattern.compile("[0-9]*");
+        if(pattern.matcher(queryName).matches()) {
+            id = Integer.parseInt(queryName);
+        }
+        queryName = "%"+queryName+"%";
+        List<Event> events = eventRepository.findByIdOrTitleLikeOrChineseLike(id, queryName, queryName);
+
+        List<Integer> aoIDList = chainRepository.findEventIdByType("AdverseOutcome");
+
+        List<Event> aos = events.stream().filter(event -> aoIDList.contains(event.getId())).collect(Collectors.toList());
+        return aos;
+    }
+
 }
