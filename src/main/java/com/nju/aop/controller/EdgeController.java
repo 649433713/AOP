@@ -39,16 +39,16 @@ public class EdgeController {
 
     @GetMapping("/search/findByAopId")
     public List<Edge> findByAopId(@RequestParam Integer aopId) {
-        List<Chain> chains = chainRepository.findByAopId(aopId);
-        List<String> searchList = new ArrayList<>();
-        for (int i = 0; i < chains.size() - 1; i++) {
-            for (int j = 0; j < chains.size(); j++) {
-                if (i == j) {
-                    continue;
-                }
-                searchList.add(chains.get(i).getEventId() + " " + chains.get(j).getEventId());
-            }
-        }
-        return edgeRepository.findBySourceIdAndTargetIdIn(searchList);
+//        List<Chain> chains = chainRepository.findByAopId(aopId);
+//        List<String> searchList = new ArrayList<>();
+//        for (int i = 0; i < chains.size() - 1; i++) {
+//            for (int j = 0; j < chains.size(); j++) {
+//                if (i == j) {
+//                    continue;
+//                }
+//                searchList.add(chains.get(i).getEventId() + " " + chains.get(j).getEventId());
+//            }
+//        }
+        return edgeRepository.findByAopId(aopId);
     }
 }
