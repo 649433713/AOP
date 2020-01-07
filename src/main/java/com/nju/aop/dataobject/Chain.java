@@ -29,4 +29,6 @@ public class Chain {
     @ExcelCell("MIE/KE/AO")
     private String type;
 
+    private String name;
+
 }
