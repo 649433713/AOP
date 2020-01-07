@@ -23,4 +23,6 @@ public interface EdgeRepository extends JpaRepository<Edge, Integer> {
     @Query(value = "select * from edge where concat(source_id,' ',target_id) in ?1", nativeQuery = true)
     List<Edge> findBySourceIdAndTargetIdIn(List<String> str);
 
+    @Query(value="select * from edge where source_id in (select event_id from chain where aop_id=?1) and target_id in (select event_id from chain where aop_id=?1)",nativeQuery = true)
+    List<Edge> findByAopId(Integer aopId);
 }

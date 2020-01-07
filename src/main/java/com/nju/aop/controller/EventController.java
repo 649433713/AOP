@@ -1,14 +1,9 @@
 package com.nju.aop.controller;
 
-import com.nju.aop.dataobject.Aop;
-import com.nju.aop.dataobject.Chain;
-import com.nju.aop.dataobject.Event;
-import com.nju.aop.repository.AopRepository;
-import com.nju.aop.dataobject.Bioassay;
+import com.nju.aop.dataobject.*;
+import com.nju.aop.dto.EventWithDistance;
+import com.nju.aop.repository.*;
 import com.nju.aop.dto.KEAndAO;
-import com.nju.aop.repository.BioassayRepository;
-import com.nju.aop.repository.ChainRepository;
-import com.nju.aop.repository.EventRepository;
 import com.nju.aop.utils.ExampleMatcherUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +34,8 @@ public class EventController {
     private AopRepository aopRepository;
     @Autowired
     private BioassayRepository bioassayRepository;
+    @Autowired
+    private EdgeRepository edgeRepository;
 
     @PostMapping("/search/findByExample")
     public Page<Event> findByExample(@RequestBody Event event, Pageable pageable) {
@@ -81,24 +78,82 @@ public class EventController {
             Event KE = eventRepository.getOne(keID);
             keAndAO.setKE(KE);
 
-            Set<Integer> aoIDs = new HashSet<>();
+//            Set<Integer> aoIDs = new HashSet<>();
+            Map<Integer,Integer> distanceMap = new HashMap<>(); // aoID:the shortest distance between KE(with id keID) and AO(with id aoID)
             List<Chain> chainsWithSameEID = chainRepository.findByEventId(keID);
             for(Chain chain:chainsWithSameEID) {
                 List<Chain> AOs = chainRepository.findByAopIdAndType(chain.getAopId(),"AdverseOutcome");
                 for(Chain ao: AOs) {
-                    aoIDs.add(ao.getEventId());
+//                    aoIDs.add(ao.getEventId());
+                    int distance = getDistance(ao.getAopId(),keID,ao.getEventId());
+                    if(!distanceMap.containsKey(ao.getEventId()) || distance < distanceMap.get(ao.getEventId())) {
+                        distanceMap.put(ao.getEventId(),distance);
+                    }
+
                 }
             }
 
-            List<Event> AOs = new ArrayList<>();
-            for(int aoID: aoIDs) {
+            List<EventWithDistance> AOs = new ArrayList<>();
+//            for(int aoID: aoIDs) {
+//                Event AO = eventRepository.getOne(aoID);
+//                AOs.add(AO);
+//            }
+            for(int aoID:distanceMap.keySet()) {
                 Event AO = eventRepository.getOne(aoID);
-                AOs.add(AO);
+                EventWithDistance eventWithDistance = new EventWithDistance(AO,distanceMap.get(aoID));
+                AOs.add(eventWithDistance);
             }
             keAndAO.setAOs(AOs);
             list.add(keAndAO);
         }
         return list;
+    }
+
+//    @GetMapping("/distance/{aopId}/{keId}/{aoId}")
+    private int getDistance(int aopId, int keId, int aoId) {
+        List<Edge> edges = edgeRepository.findByAopId(aopId);
+        List<Chain> nodes = chainRepository.findByAopId(aopId);
+        int n = nodes.size();
+        int[] vertex = new int[n];
+        int[][] edgeMatrix = new int[n][n];
+        Map<Integer,Integer> map = new HashMap<>();
+        int num=0;
+        for(Chain node: nodes) {
+            map.put(node.getEventId(),num++);
+        }
+//        System.out.println(map);
+        for(int i=0;i<n;i++) {
+            for(int j=0;j<n;j++) {
+                edgeMatrix[i][j] = Integer.MAX_VALUE;
+            }
+        }
+        for(Edge e: edges) {
+            int source = map.get(e.getSourceId());
+            int target = map.get(e.getTargetId());
+            edgeMatrix[source][target] = 1;
+        }
+
+        int[] min = {Integer.MAX_VALUE};
+        dfs(map.get(keId),map.get(aoId),0,n,min,vertex,edgeMatrix);
+        return min[0];
+    }
+
+    private void dfs(int cur, int end, int dis, int n, int[] min, int[] vertex, int[][] edge){
+        if(dis>min[0]) return;
+        if(cur==end) {
+            if(dis < min[0]) {
+                min[0] = dis;
+                return;
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            if (edge[cur][i] != Integer.MAX_VALUE && vertex[i] == 0) {
+                vertex[i] = 1;
+                dfs(i, end, dis+1,n,min,vertex,edge);
+                vertex[i] = 0;
+            }
+        }
+        return;
     }
 
     @GetMapping("/findAOsByQueryName")

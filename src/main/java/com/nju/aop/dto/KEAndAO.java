@@ -15,5 +15,5 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class KEAndAO implements Serializable {
     private Event KE;
-    private List<Event> AOs;
+    private List<EventWithDistance> AOs;
 }
