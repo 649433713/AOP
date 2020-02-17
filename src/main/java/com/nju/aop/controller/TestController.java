@@ -41,10 +41,11 @@ public class TestController {
 
     private Map<Integer, List<Edge>> sourceEdgeMap = new HashMap<>();
 
+    private Map<Integer, List<Edge>> targetEdgeMap = new HashMap<>();
+
     @PostConstruct
     private void init() {
         List<Edge> edges = edgeRepository.findAll();
-        completion(edges);
         for (Edge edge : edges) {
             if (sourceEdgeMap.get(edge.getSourceId()) == null) {
                 List<Edge> temp = new ArrayList<>();
@@ -52,6 +53,13 @@ public class TestController {
                 sourceEdgeMap.put(edge.getSourceId(), temp);
             } else {
                 sourceEdgeMap.get(edge.getSourceId()).add(edge);
+            }
+            if (targetEdgeMap.get(edge.getTargetId()) == null) {
+                List<Edge> temp = new ArrayList<>();
+                temp.add(edge);
+                targetEdgeMap.put(edge.getTargetId(), temp);
+            } else {
+                targetEdgeMap.get(edge.getTargetId()).add(edge);
             }
         }
     }
@@ -119,29 +127,17 @@ public class TestController {
         assert result != null;
         System.out.println(result.size());
     }
+
+    @GetMapping("/generateAopByAo/{id}")
+    public void generateAopByAo(@PathVariable Integer id) {
+        List result = findTraceDesc("", id, targetEdgeMap, new HashMap<>());
+        assert result != null;
+        System.out.println(result.size());
+    }
+
     @GetMapping("/generateAop")
     public void generateAop() throws IOException {
-        List<Edge> edges = edgeRepository.findAll();
        // completion(edges);
-        Map<Integer, List<Edge>> sourceEdgeMap = new HashMap<>();
-        Map<Integer, List<Edge>> targetEdgeMap = new HashMap<>();
-        for (Edge edge : edges) {
-            if (sourceEdgeMap.get(edge.getSourceId()) == null) {
-                List<Edge> temp = new ArrayList<>();
-                temp.add(edge);
-                sourceEdgeMap.put(edge.getSourceId(), temp);
-            } else {
-                sourceEdgeMap.get(edge.getSourceId()).add(edge);
-            }
-            if (targetEdgeMap.get(edge.getTargetId()) == null) {
-                List<Edge> temp = new ArrayList<>();
-                temp.add(edge);
-                targetEdgeMap.put(edge.getTargetId(), temp);
-            } else {
-                targetEdgeMap.get(edge.getTargetId()).add(edge);
-            }
-        }
-
         Set<Integer> sourceIds = new HashSet<>(sourceEdgeMap.keySet());
         Set<Integer> targetIds = targetEdgeMap.keySet();
         sourceIds.removeIf(targetIds::contains);
@@ -170,24 +166,26 @@ public class TestController {
 //            }
 //        }
 //        fileWriter.close();
+
+
         System.out.println();
     }
 
 
     private List<String> findTrace(String trace, Integer source, Map<Integer, List<Edge>> sourceEdgeMap, Map<Integer, List<String>> traceMap) {
         List<Edge> edges = sourceEdgeMap.get(source);
-        if (source == 1296 || source == 1310) {
-            //edges = null;
-        }
         if (CollectionUtils.isEmpty(edges)) {
             traceMap.put(source, null);
             return null;
         }
+
+        if (exist(trace, source.toString()) > 1) {
+            traceMap.put(source, null);
+            return null;
+        }
+
         List<String> traceList = new ArrayList<>();
         for (Edge edge : edges) {
-            if (exist(trace, edge.getTargetId().toString())) {
-                continue;
-            }
             List<String> targetTrace = traceMap.get(edge.getTargetId()) != null ? traceMap.get(edge.getTargetId()) :
                     findTrace(trace + "," + edge.getTargetId(), edge.getTargetId(), sourceEdgeMap, traceMap);
             if (targetTrace == null) {
@@ -202,6 +200,47 @@ public class TestController {
             traceMap.put(source, traceList);
         }
         return traceList;
+    }
+
+    private List<String> findTraceDesc(String trace, Integer source, Map<Integer, List<Edge>> targetEdgeMap, Map<Integer, List<String>> traceMap) {
+        List<Edge> edges = targetEdgeMap.get(source);
+        if (CollectionUtils.isEmpty(edges)) {
+            traceMap.put(source, null);
+            return null;
+        }
+
+        if (exist(trace, source.toString()) > 1) {
+            traceMap.put(source, null);
+            return null;
+        }
+
+        List<String> traceList = new ArrayList<>();
+        for (Edge edge : edges) {
+            List<String> targetTrace = traceMap.get(edge.getSourceId()) != null ? traceMap.get(edge.getSourceId()) :
+                    findTraceDesc(trace + "," + edge.getSourceId(), edge.getSourceId(), targetEdgeMap, traceMap);
+            if (targetTrace == null) {
+                traceList.add(source + "," + edge.getSourceId());
+            } else {
+                for (String string : targetTrace) {
+                    traceList.add(source + "," + string);
+                }
+            }
+        }
+        if (traceList.size() != 0) {
+            traceMap.put(source, traceList);
+        }
+        return traceList;
+    }
+
+    private int exist(String source, String target) {
+        String[] sources = source.split(",");
+        int count = 0;
+        for (int i = 0; i < sources.length; i++) {
+            if (sources[i].equals(target)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private boolean check(String trace, Map<Integer, List<Edge>> sourceEdgeMap) {
@@ -227,16 +266,6 @@ public class TestController {
         }
         for (Edge edge : targetEdgeList) {
             if (edge.getTargetId().equals(target)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean exist(String source, String target) {
-        String[] sources = source.split(",");
-        for (String s : sources) {
-            if (s.equals(target)) {
                 return true;
             }
         }
