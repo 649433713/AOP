@@ -71,21 +71,25 @@ public class AopImportUtil {
 
 
     public void insertChains(String path,String name) throws Exception {
+        chainRepository.deleteAll();
         List<Chain> list = ExcelUtil.readExcelToEntity(Chain.class, new FileInputStream(path), name,0);
         chainRepository.saveAll(list);
     }
 
     public void insertAops(String path,String name) throws Exception {
+        aopRepository.deleteAll();
         List<Aop> list = ExcelUtil.readExcelToEntity(Aop.class, new FileInputStream(path), name,1);
         aopRepository.saveAll(list);
     }
 
     public void insertEvents(String path,String name) throws Exception {
+        eventRepository.deleteAll();
         List<Event> list = ExcelUtil.readExcelToEntity(Event.class, new FileInputStream(path), name,2);
         eventRepository.saveAll(list);
     }
 
     public void insertMies(String path,String name) throws Exception {
+        mieRepository.deleteAll();
         List<Mie> list = ExcelUtil.readExcelToEntity(Mie.class, new FileInputStream(path), name,3);
         list = list.stream().filter(t -> t.getId() != null).collect(Collectors.toList());
         for (int i = 0; i < list.size(); i++) {
@@ -98,6 +102,7 @@ public class AopImportUtil {
     }
 
     public void insertBiodetections(String path,String name) throws Exception {
+        biodetectionRepository.deleteAll();
         List<Biodetection> list = ExcelUtil.readExcelToEntity(Biodetection.class, new FileInputStream(path), name,3);
         list = list.stream().filter(t -> t.getName() != null).collect(Collectors.toList());
         for (int i = 0; i < list.size(); i++) {
@@ -110,6 +115,7 @@ public class AopImportUtil {
     }
 
     public void insertBioassays(String path,String name) throws Exception {
+        bioassayRepository.deleteAll();
         List<BioassayVO> list = ExcelUtil.readExcelToEntity(BioassayVO.class, new FileInputStream(path), name,3);
         List<Bioassay> bioassayList = new ArrayList<>();
         for (BioassayVO vo : list) {
@@ -124,6 +130,7 @@ public class AopImportUtil {
     }
 
     public void insertToxes(String path,String name)throws Exception {
+        toxRepository.deleteAll();
         List<Tox> list = ExcelUtil.readExcelToEntity(Tox.class, new FileInputStream(path), name,4);
         list = list.stream().peek(tox -> {
             while (tox.getBioassay().charAt(tox.getBioassay().length() - 1) == ',') {
@@ -155,11 +162,15 @@ public class AopImportUtil {
     }
 
     public void insertChemicals(String path,String name) throws Exception {
+        chemicalRepository.deleteAll();
         List<Chemical> list = ExcelUtil.readExcelToEntity(Chemical.class, new FileInputStream(path), name,4);
         chemicalRepository.saveAll(list);
     }
 
     public void insertChemicalOtherInfos(String path,String name) throws Exception {
+        chemicalCasRepository.deleteAll();
+        chemicalAopRepository.deleteAll();
+        chemicalEventRepository.deleteAll();
         List<CasEtc> list = ExcelUtil.readExcelToEntity(CasEtc.class, new FileInputStream(path), name,4);
         List<ChemicalCas> caslist = new ArrayList<>();
         List<ChemicalAop> aoplist = new ArrayList<>();
@@ -250,6 +261,7 @@ public class AopImportUtil {
     }
 
     public void insertEdges(String path,String name) throws Exception {
+        edgeRepository.deleteAll();
         List<Edge> list = ExcelUtil.readExcelToEntity(Edge.class, new FileInputStream(path), name,5);
         edgeRepository.saveAll(list);
     }
