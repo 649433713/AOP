@@ -255,7 +255,12 @@ public class AopImportUtil {
     }
 
     public void insertAopExcel(InputStream inputStream) throws IOException {
-        Workbook workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xlsx");
+        Workbook workbook;
+        try {
+            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xlsx");
+        } catch (Exception e) {
+            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xls");
+        }
         Iterator<Sheet> iterator = workbook.sheetIterator();
         while (iterator.hasNext()) {
             Sheet sheet = iterator.next();
@@ -268,7 +273,12 @@ public class AopImportUtil {
     }
 
     public void insertToxExcel(InputStream inputStream) throws IOException {
-        Workbook workbook = ExcelUtil.getWorkBoot(inputStream, "TOX.xlsx");
+        Workbook workbook;
+        try {
+            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xlsx");
+        } catch (Exception e) {
+            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xls");
+        }
         Iterator<Sheet> iterator = workbook.sheetIterator();
         while (iterator.hasNext()) {
             Sheet sheet = iterator.next();

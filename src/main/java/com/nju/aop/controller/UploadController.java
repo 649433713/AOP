@@ -84,6 +84,9 @@ public class UploadController {
         //MultipartFile的方法直接写文件
         try {
             //上传文件
+            if (!newFile.exists() && !newFile.createNewFile()) {
+                throw new IOException();
+            }
             excel.transferTo(newFile);
         } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
