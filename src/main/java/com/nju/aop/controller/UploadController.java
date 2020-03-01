@@ -40,8 +40,14 @@ public class UploadController {
                 if (StringUtils.isEmpty(path)) {
                     return ResultVOUtil.error(-1, "文件存储失败");
                 }
-                aopImportUtil.insertAopExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
-            } catch (IllegalStateException | IOException e) {
+                new Thread(() -> {
+                    try {
+                        aopImportUtil.insertAopExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } catch (IllegalStateException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
             }
@@ -62,8 +68,14 @@ public class UploadController {
                 if (StringUtils.isEmpty(path)) {
                     return ResultVOUtil.error(-1, "文件存储失败");
                 }
-                aopImportUtil.insertToxExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
-            } catch (IllegalStateException | IOException e) {
+                new Thread(() -> {
+                    try {
+                        aopImportUtil.insertToxExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } catch (IllegalStateException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
             }
