@@ -70,23 +70,23 @@ public class AopImportUtil {
     private JdbcTemplate jdbcTemplate;
 
 
-    public void insertChains(String path) throws Exception {
-        List<Chain> list = ExcelUtil.readExcelToEntity(Chain.class, new FileInputStream(path), "AOP.xlsx",0);
+    public void insertChains(String path,String name) throws Exception {
+        List<Chain> list = ExcelUtil.readExcelToEntity(Chain.class, new FileInputStream(path), name,0);
         chainRepository.saveAll(list);
     }
 
-    public void insertAops(String path) throws Exception {
-        List<Aop> list = ExcelUtil.readExcelToEntity(Aop.class, new FileInputStream(path), "AOP.xlsx",1);
+    public void insertAops(String path,String name) throws Exception {
+        List<Aop> list = ExcelUtil.readExcelToEntity(Aop.class, new FileInputStream(path), name,1);
         aopRepository.saveAll(list);
     }
 
-    public void insertEvents(String path) throws Exception {
-        List<Event> list = ExcelUtil.readExcelToEntity(Event.class, new FileInputStream(path), "AOP.xlsx",2);
+    public void insertEvents(String path,String name) throws Exception {
+        List<Event> list = ExcelUtil.readExcelToEntity(Event.class, new FileInputStream(path), name,2);
         eventRepository.saveAll(list);
     }
 
-    public void insertMies(String path) throws Exception {
-        List<Mie> list = ExcelUtil.readExcelToEntity(Mie.class, new FileInputStream(path), "AOP.xlsx",3);
+    public void insertMies(String path,String name) throws Exception {
+        List<Mie> list = ExcelUtil.readExcelToEntity(Mie.class, new FileInputStream(path), name,3);
         list = list.stream().filter(t -> t.getId() != null).collect(Collectors.toList());
         for (int i = 0; i < list.size(); i++) {
             Mie mie = list.get(i);
@@ -97,8 +97,8 @@ public class AopImportUtil {
         mieRepository.saveAll(list);
     }
 
-    public void insertBiodetections(String path) throws Exception {
-        List<Biodetection> list = ExcelUtil.readExcelToEntity(Biodetection.class, new FileInputStream(path), "AOP.xlsx",3);
+    public void insertBiodetections(String path,String name) throws Exception {
+        List<Biodetection> list = ExcelUtil.readExcelToEntity(Biodetection.class, new FileInputStream(path), name,3);
         list = list.stream().filter(t -> t.getName() != null).collect(Collectors.toList());
         for (int i = 0; i < list.size(); i++) {
             Biodetection biodetection = list.get(i);
@@ -109,8 +109,8 @@ public class AopImportUtil {
         biodetectionRepository.saveAll(list);
     }
 
-    public void insertBioassays(String path) throws Exception {
-        List<BioassayVO> list = ExcelUtil.readExcelToEntity(BioassayVO.class, new FileInputStream(path), "AOP2.xlsx",3);
+    public void insertBioassays(String path,String name) throws Exception {
+        List<BioassayVO> list = ExcelUtil.readExcelToEntity(BioassayVO.class, new FileInputStream(path), name,3);
         List<Bioassay> bioassayList = new ArrayList<>();
         for (BioassayVO vo : list) {
             if (vo.getBioassay1() != null) {
@@ -123,8 +123,8 @@ public class AopImportUtil {
         bioassayRepository.saveAll(bioassayList);
     }
 
-    public void insertToxes(String path)throws Exception {
-        List<Tox> list = ExcelUtil.readExcelToEntity(Tox.class, new FileInputStream(path), "AOP2.xlsx",4);
+    public void insertToxes(String path,String name)throws Exception {
+        List<Tox> list = ExcelUtil.readExcelToEntity(Tox.class, new FileInputStream(path), name,4);
         list = list.stream().peek(tox -> {
             while (tox.getBioassay().charAt(tox.getBioassay().length() - 1) == ',') {
                 tox.setBioassay(tox.getBioassay().substring(0, tox.getBioassay().length() - 1));
@@ -154,13 +154,13 @@ public class AopImportUtil {
         });
     }
 
-    public void insertChemicals(String path) throws Exception {
-        List<Chemical> list = ExcelUtil.readExcelToEntity(Chemical.class, new FileInputStream(path), "AOP.xlsx",4);
+    public void insertChemicals(String path,String name) throws Exception {
+        List<Chemical> list = ExcelUtil.readExcelToEntity(Chemical.class, new FileInputStream(path), name,4);
         chemicalRepository.saveAll(list);
     }
 
-    public void insertChemicalOtherInfos(String path) throws Exception {
-        List<CasEtc> list = ExcelUtil.readExcelToEntity(CasEtc.class, new FileInputStream(path), "AOP.xlsx",4);
+    public void insertChemicalOtherInfos(String path,String name) throws Exception {
+        List<CasEtc> list = ExcelUtil.readExcelToEntity(CasEtc.class, new FileInputStream(path), name,4);
         List<ChemicalCas> caslist = new ArrayList<>();
         List<ChemicalAop> aoplist = new ArrayList<>();
         List<ChemicalEvent> eventlist = new ArrayList<>();
@@ -249,18 +249,14 @@ public class AopImportUtil {
         chemicalEventRepository.saveAll(eventlist);
     }
 
-    public void insertEdges(String path) throws Exception {
-        List<Edge> list = ExcelUtil.readExcelToEntity(Edge.class, new FileInputStream(path), "AOP.xlsx",5);
+    public void insertEdges(String path,String name) throws Exception {
+        List<Edge> list = ExcelUtil.readExcelToEntity(Edge.class, new FileInputStream(path), name,5);
         edgeRepository.saveAll(list);
     }
 
-    public void insertAopExcel(InputStream inputStream) throws IOException {
-        Workbook workbook;
-        try {
-            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xlsx");
-        } catch (Exception e) {
-            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xls");
-        }
+    public void insertAopExcel(InputStream inputStream, String name) throws IOException {
+
+        Workbook workbook = ExcelUtil.getWorkBoot(inputStream, name);
         Iterator<Sheet> iterator = workbook.sheetIterator();
         while (iterator.hasNext()) {
             Sheet sheet = iterator.next();
@@ -272,13 +268,9 @@ public class AopImportUtil {
         }
     }
 
-    public void insertToxExcel(InputStream inputStream) throws IOException {
-        Workbook workbook;
-        try {
-            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xlsx");
-        } catch (Exception e) {
-            workbook = ExcelUtil.getWorkBoot(inputStream, "AOP.xls");
-        }
+    public void insertToxExcel(InputStream inputStream, String name) throws IOException {
+        Workbook workbook = ExcelUtil.getWorkBoot(inputStream, name);
+
         Iterator<Sheet> iterator = workbook.sheetIterator();
         while (iterator.hasNext()) {
             Sheet sheet = iterator.next();

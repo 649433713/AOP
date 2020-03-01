@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -25,9 +24,6 @@ import java.util.Calendar;
 public class UploadController {
 
     @Autowired
-    private ServletContext servletContext;
-
-    @Autowired
     private AopImportUtil aopImportUtil;
 
     @RequestMapping(value = "/aop",method = RequestMethod.POST)
@@ -38,8 +34,8 @@ public class UploadController {
             return ResultVOUtil.error(-1, "data error");
         }else {
             try {
-                saveFile(excel);
-                aopImportUtil.insertAopExcel(excel.getInputStream());
+                String path = saveFile(excel);
+                aopImportUtil.insertAopExcel(excel.getInputStream(), path.substring(path.indexOf(".xls")));
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
@@ -57,8 +53,8 @@ public class UploadController {
             return ResultVOUtil.error(-1, "data error");
         }else {
             try {
-                saveFile(excel);
-                aopImportUtil.insertToxExcel(excel.getInputStream());
+                String path = saveFile(excel);
+                aopImportUtil.insertToxExcel(excel.getInputStream(), path.substring(path.indexOf(".xls")));
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
@@ -68,17 +64,14 @@ public class UploadController {
     }
 
 
-    private void saveFile(MultipartFile excel) {
+    private String saveFile(MultipartFile excel) {
 
         //保存时的文件名
         DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
         Calendar calendar = Calendar.getInstance();
         String dateName = df.format(calendar.getTime()) + excel.getOriginalFilename();
 
-        //保存文件的绝对路径
-        String realPath = servletContext.getRealPath("/");
-
-        String filePath = realPath + "resource" + File.separator + "static" + File.separator + dateName;//此路径是放在tomcat war包的绝对路径
+        String filePath = File.separator + "tmp" + File.separator + "resource" + File.separator + "static" + File.separator + "aop" + File.separator + dateName;
         File newFile = new File(filePath);
         System.out.println("filePath=:" + filePath);
         //MultipartFile的方法直接写文件
@@ -91,5 +84,6 @@ public class UploadController {
         } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
         }
+        return filePath;
     }
 }
