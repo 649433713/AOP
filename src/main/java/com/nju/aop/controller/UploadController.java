@@ -5,10 +5,12 @@ import com.nju.aop.utils.excel.AopImportUtil;
 import com.nju.aop.vo.ResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -35,7 +37,10 @@ public class UploadController {
         }else {
             try {
                 String path = saveFile(excel);
-                aopImportUtil.insertAopExcel(excel.getInputStream(), path.substring(path.indexOf(".xls")));
+                if (StringUtils.isEmpty(path)) {
+                    return ResultVOUtil.error(-1, "文件存储失败");
+                }
+                aopImportUtil.insertAopExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
@@ -54,7 +59,10 @@ public class UploadController {
         }else {
             try {
                 String path = saveFile(excel);
-                aopImportUtil.insertToxExcel(excel.getInputStream(), path.substring(path.indexOf(".xls")));
+                if (StringUtils.isEmpty(path)) {
+                    return ResultVOUtil.error(-1, "文件存储失败");
+                }
+                aopImportUtil.insertToxExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
             } catch (IllegalStateException | IOException e) {
                 e.printStackTrace();
                 return ResultVOUtil.error(-1, "文件格式不正确");
@@ -83,6 +91,7 @@ public class UploadController {
             excel.transferTo(newFile);
         } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
+            return null;
         }
         return filePath;
     }
