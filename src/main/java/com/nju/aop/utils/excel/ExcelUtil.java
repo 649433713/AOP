@@ -94,7 +94,7 @@ public class ExcelUtil {
      * @return
      * @throws IOException
      */
-    private static Workbook getWorkBoot(InputStream in, String fileName) throws IOException {
+    public static Workbook getWorkBoot(InputStream in, String fileName) throws IOException {
         if (fileName.endsWith(".xlsx")) {
             return new XSSFWorkbook(in);
         } else {
