@@ -15,9 +15,11 @@ import lombok.NoArgsConstructor;
 public class BioassayVO {
     @ExcelCell("KE ID")
     private Integer eventId;
-
+    @ExcelCell("检测类型/对象1")
     private String bioassay1;
+    @ExcelCell("检测类型/对象2")
     private String bioassay2;
+    @ExcelCell("检测效应")
     private String effect;
 
 }

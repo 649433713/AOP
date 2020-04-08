@@ -20,9 +20,11 @@ import javax.persistence.Id;
 @JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class Event {
     @Id
+    @ExcelCell("KE ID")
     private Integer id;
+    @ExcelCell("英文名")
     private String title;
-    @ExcelCell("汉化")
+    @ExcelCell("中文名")
     private String chinese;
     @ExcelCell("物种")
     private String species;
@@ -30,13 +32,15 @@ public class Event {
     private String sex;
     @ExcelCell("生命周期")
     private String lifeCycle;
-    @ExcelCell("器官")
+    @ExcelCell("器官/毒性类型")
     private String organ;
-    @ExcelCell("癌症")
+    @ExcelCell("致癌/遗传毒性")
     private String cancer;
     @ExcelCell("存活率")
     private String survivalRates;
-    @ExcelCell("水平")
+    @ExcelCell("生物水平")
     private String level;
+    @ExcelCell("类型")
+    private String mieType;
 
 }

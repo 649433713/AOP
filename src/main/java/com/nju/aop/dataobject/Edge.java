@@ -1,5 +1,6 @@
 package com.nju.aop.dataobject;
 
+import com.nju.aop.utils.excel.ExcelCell;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,10 +19,15 @@ import java.util.Objects;
 @AllArgsConstructor
 public class Edge {
     @Id
+    @ExcelCell("KER-ID")
     private Integer id;
+    @ExcelCell("Source-ID")
     private Integer sourceId;
+    @ExcelCell("Source-Name")
     private String sourceTitle;
+    @ExcelCell("Target-ID")
     private Integer targetId;
+    @ExcelCell("Target-Name")
     private String targetTitle;
 
     @Override

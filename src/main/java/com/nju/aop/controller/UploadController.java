@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,8 +41,8 @@ public class UploadController {
                 }
                 new Thread(() -> {
                     try {
-                        aopImportUtil.insertAopExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
-                    } catch (IOException e) {
+                        aopImportUtil.insertAopExcel(new File(path), path.substring(path.indexOf(".xls")));
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }).start();
@@ -70,8 +69,8 @@ public class UploadController {
                 }
                 new Thread(() -> {
                     try {
-                        aopImportUtil.insertToxExcel(new FileInputStream(path), path.substring(path.indexOf(".xls")));
-                    } catch (IOException e) {
+                        aopImportUtil.insertToxExcel(new File(path), path.substring(path.indexOf(".xls")));
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }).start();
@@ -107,4 +106,17 @@ public class UploadController {
         }
         return filePath;
     }
+
+
+    @RequestMapping(value = "/aop_test",method = RequestMethod.GET)
+    public void uploadAopTest(){
+
+        String path = "/Users/yinywf/Downloads/AOP汇总表.xlsx";
+        try {
+            aopImportUtil.insertAopExcel(new File(path), path.substring(path.indexOf(".xls")));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

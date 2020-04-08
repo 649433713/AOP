@@ -6,9 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author yinywf
@@ -18,17 +17,16 @@ import javax.persistence.Id;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Chain {
+@Table(name = "event", schema = "aop")
+public class MieInteractionType {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ExcelCell("MIE ID")
     private Integer id;
-    @ExcelCell("AOP ID")
-    private Integer aopId;
-    @ExcelCell("Event ID")
-    private Integer eventId;
-    @ExcelCell("MIE/KE/AO")
-    private String type;
-
-    private String name;
+    @ExcelCell("英文名")
+    private String title;
+    @ExcelCell("中文名")
+    private String chinese;
+    @ExcelCell("类型")
+    private String mieType;
 
 }
