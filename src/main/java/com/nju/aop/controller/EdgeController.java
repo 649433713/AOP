@@ -1,6 +1,7 @@
 package com.nju.aop.controller;
 import com.nju.aop.dataobject.Chain;
 import com.nju.aop.dataobject.Edge;
+import com.nju.aop.dataobject.Event;
 import com.nju.aop.repository.ChainRepository;
 import com.nju.aop.repository.EdgeRepository;
 import com.nju.aop.utils.ExampleMatcherUtil;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author yinywf
@@ -50,5 +52,12 @@ public class EdgeController {
 //            }
 //        }
         return edgeRepository.findByAopId(aopId);
+    }
+
+    @PostMapping("/findEdgesByEvents")
+    public List<Edge> findByEvents(@RequestBody List<Event> events) {
+        List<Integer> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        List<Edge> edges = edgeRepository.findBySourceIdInAndTargetIdIn(eventIds, eventIds);
+        return edges;
     }
 }

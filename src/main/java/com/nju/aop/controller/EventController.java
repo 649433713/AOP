@@ -6,12 +6,21 @@ import com.nju.aop.repository.*;
 import com.nju.aop.dto.KEAndAO;
 import com.nju.aop.utils.ExampleMatcherUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +56,15 @@ public class EventController {
     public Page<Event> findByExample2(Event event, Pageable pageable) {
 
         return eventRepository.findAll(ExampleMatcherUtil.transfer(event), pageable);
+    }
+
+    @PostMapping("/search/findAOsByExample")
+    public List<Event> findAOsByExample(@RequestBody Event event) {
+        List<Event> events = eventRepository.findAll(ExampleMatcherUtil.transfer(event));
+        List<Integer> aoIDList = chainRepository.findEventIdByType("AdverseOutcome");
+
+        List<Event> aos = events.stream().filter(e -> aoIDList.contains(e.getId())).collect(Collectors.toList());
+        return aos;
     }
 
     @GetMapping("/search/relativeAops")
@@ -106,9 +124,123 @@ public class EventController {
             keAndAO.setAOs(AOs);
             list.add(keAndAO);
         }
+        saveExcel(list, bioassay, effect);
         return list;
     }
 
+    private void saveExcel(List<KEAndAO> keAndAOList, String bioassay, String effect){
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet();
+        XSSFRow firstRow = sheet.createRow(0);
+        String[] heads = {"KE ID","KE英文名","KE中文名","KE物种","KE性别","KE生命周期","KE器官","KE癌症","KE存活率","KE水平"
+                ,"AO ID","AO英文名","AO中文名","AO物种","AO性别","AO生命周期","AO器官","AO癌症","AO存活率","AO水平","距离"};
+        XSSFCell[] firstCells = new XSSFCell[heads.length];
+        for(int i = 0; i < heads.length; i++) {
+            firstCells[i] = firstRow.createCell(i);
+            firstCells[i].setCellValue(heads[i]);
+        }
+        int curRowNum = 1;
+        for(KEAndAO keAndAO: keAndAOList) {
+            Event ke = keAndAO.getKE();
+            List<EventWithDistance> AOs = keAndAO.getAOs();
+            if(AOs.size() > 1) {
+                CellRangeAddress keId = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,0,0);
+                CellRangeAddress keTitle = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,1,1);
+                CellRangeAddress keChinese = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1, 2,2);
+                CellRangeAddress keSpecies = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,3,3);
+                CellRangeAddress keSex = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,4,4);
+                CellRangeAddress keCycle = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,5,5);
+                CellRangeAddress keOrgan = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,6,6);
+                CellRangeAddress keCancer = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,7,7);
+                CellRangeAddress keRate = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,8,8);
+                CellRangeAddress keLevel = new CellRangeAddress(curRowNum,curRowNum+AOs.size()-1,9,9);
+                sheet.addMergedRegion(keId);
+                sheet.addMergedRegion(keTitle);
+                sheet.addMergedRegion(keChinese);
+                sheet.addMergedRegion(keSpecies);
+                sheet.addMergedRegion(keSex);
+                sheet.addMergedRegion(keCycle);
+                sheet.addMergedRegion(keOrgan);
+                sheet.addMergedRegion(keCancer);
+                sheet.addMergedRegion(keRate);
+                sheet.addMergedRegion(keLevel);
+                for(int i=0;i<AOs.size();i++) {
+                    EventWithDistance eventWithDistance = AOs.get(i);
+                    Event ao = eventWithDistance.getEvent();
+                    XSSFRow row = sheet.createRow(curRowNum+i);
+                    row.createCell(10).setCellValue(ao.getId());
+                    row.createCell(11).setCellValue(ao.getTitle());
+                    row.createCell(12).setCellValue(ao.getChinese());
+                    row.createCell(13).setCellValue(ao.getSpecies());
+                    row.createCell(14).setCellValue(ao.getSex());
+                    row.createCell(15).setCellValue(ao.getLifeCycle());
+                    row.createCell(16).setCellValue(ao.getOrgan());
+                    row.createCell(17).setCellValue(ao.getCancer());
+                    row.createCell(18).setCellValue(ao.getSurvivalRates());
+                    row.createCell(19).setCellValue(ao.getLevel());
+                    row.createCell(20).setCellValue(eventWithDistance.getDistance());
+                }
+                sheet.getRow(curRowNum).createCell(0).setCellValue(ke.getId());
+                sheet.getRow(curRowNum).createCell(1).setCellValue(ke.getTitle());
+                sheet.getRow(curRowNum).createCell(2).setCellValue(ke.getChinese());
+                sheet.getRow(curRowNum).createCell(3).setCellValue(ke.getSpecies());
+                sheet.getRow(curRowNum).createCell(4).setCellValue(ke.getSex());
+                sheet.getRow(curRowNum).createCell(5).setCellValue(ke.getLifeCycle());
+                sheet.getRow(curRowNum).createCell(6).setCellValue(ke.getOrgan());
+                sheet.getRow(curRowNum).createCell(7).setCellValue(ke.getCancer());
+                sheet.getRow(curRowNum).createCell(8).setCellValue(ke.getSurvivalRates());
+                sheet.getRow(curRowNum).createCell(9).setCellValue(ke.getLevel());
+                curRowNum+=AOs.size();
+            }
+            else {
+                XSSFRow row = sheet.createRow(curRowNum++);
+                Event ao = AOs.get(0).getEvent();
+                row.createCell(0).setCellValue(ke.getId());
+                row.createCell(1).setCellValue(ke.getTitle());
+                row.createCell(2).setCellValue(ke.getChinese());
+                row.createCell(3).setCellValue(ke.getSpecies());
+                row.createCell(4).setCellValue(ke.getSex());
+                row.createCell(5).setCellValue(ke.getLifeCycle());
+                row.createCell(6).setCellValue(ke.getOrgan());
+                row.createCell(7).setCellValue(ke.getCancer());
+                row.createCell(8).setCellValue(ke.getSurvivalRates());
+                row.createCell(9).setCellValue(ke.getLevel());
+                row.createCell(10).setCellValue(ao.getId());
+                row.createCell(11).setCellValue(ao.getTitle());
+                row.createCell(12).setCellValue(ao.getChinese());
+                row.createCell(13).setCellValue(ao.getSpecies());
+                row.createCell(14).setCellValue(ao.getSex());
+                row.createCell(15).setCellValue(ao.getLifeCycle());
+                row.createCell(16).setCellValue(ao.getOrgan());
+                row.createCell(17).setCellValue(ao.getCancer());
+                row.createCell(18).setCellValue(ao.getSurvivalRates());
+                row.createCell(19).setCellValue(ao.getLevel());
+                row.createCell(20).setCellValue(AOs.get(0).getDistance());
+            }
+
+        }
+
+        String name = bioassay+"-"+effect+".xlsx";
+        String filePath = File.separator + "tmp" + File.separator + "resource" + File.separator + "static" + File.separator + "resultFiles" + File.separator + name;
+//        String filePath = "E:\\resultFiles\\"+name;
+        File file = new File(filePath);
+        File dir = file.getParentFile();
+        if(!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        if(file.exists()) {
+            file.delete();
+        }
+        try {
+            file.createNewFile();
+            OutputStream os = new FileOutputStream(file);
+            workbook.write(os);
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 //    @GetMapping("/distance/{aopId}/{keId}/{aoId}")
     private int getDistance(int aopId, int keId, int aoId) {
         List<Edge> edges = edgeRepository.findByAopId(aopId);
@@ -172,4 +304,18 @@ public class EventController {
         return aos;
     }
 
+
+    @GetMapping("/findEventsByAO/{aoId}")
+    public List<Event> findByAO(@PathVariable Integer aoId) {
+        List<Event> events = new ArrayList<>();
+        Set<Integer> eventIDs = new HashSet<>();
+        List<Chain> chainWithAOId = chainRepository.findByEventIdAndType(aoId,"AdverseOutcome");
+        for(Chain chain: chainWithAOId) {
+            int aopId = chain.getAopId();
+            List<Chain> chains = chainRepository.findByAopId(aopId);
+            eventIDs.addAll(chains.stream().map(Chain::getEventId).collect(Collectors.toList()));
+        }
+        events.addAll(eventRepository.findAllById(eventIDs));
+        return events;
+    }
 }

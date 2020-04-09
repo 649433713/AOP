@@ -14,6 +14,10 @@ spring:
       basePath: /api
   jackson:
     default-property-inclusion: non_null
+  mvc:
+    static-path-pattern: /result/**
+  resources:
+    static-locations: file:/tmp/resource/static/resultFiles/
 #  redis:
 #    host: 127.0.0.1
 #    port: 6379

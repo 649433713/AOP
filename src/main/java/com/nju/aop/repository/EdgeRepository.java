@@ -25,4 +25,6 @@ public interface EdgeRepository extends JpaRepository<Edge, Integer> {
 
     @Query(value="select * from edge where source_id in (select event_id from chain where aop_id=?1) and target_id in (select event_id from chain where aop_id=?1)",nativeQuery = true)
     List<Edge> findByAopId(Integer aopId);
+
+    List<Edge> findBySourceIdInAndTargetIdIn(List<Integer> sources, List<Integer> targets);
 }

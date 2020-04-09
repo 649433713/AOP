@@ -14,6 +14,7 @@ import java.util.Objects;
 public class ChemicalInfo {
     private String cas;
     private String name;
+    private String beInChina;
 
     @Override
     public boolean equals(Object o) {
