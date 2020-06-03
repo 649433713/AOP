@@ -26,4 +26,8 @@ public class PageUtil {
         result.sort(comparator);
         return new PageImpl<T>(result, pageable, list.size());
     }
+
+    public static <T> Page<T> listConvertToPageWithOnePage(List<T> list, Pageable pageable, long totalElements) {
+        return new PageImpl<T>(list, pageable, totalElements);
+    }
 }
