@@ -2,16 +2,19 @@ package com.nju.aop.controller;
 
 import com.nju.aop.dataobject.*;
 import com.nju.aop.dto.ChemicalInfo;
+import com.nju.aop.dto.ToxDTO;
 import com.nju.aop.repository.BioassayRepository;
 import com.nju.aop.repository.ChainRepository;
 import com.nju.aop.repository.ChemicalBriefRepository;
 import com.nju.aop.repository.ToxRepository;
+import com.nju.aop.utils.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,8 +26,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,8 +47,34 @@ public class ToxController {
     private ChemicalBriefRepository chemicalBriefRepository;
 
     @GetMapping("/{queryName}")
-    public Page<Tox> getByQueryName(@PathVariable String queryName, Pageable pageable) {
-        return toxRepository.findByCasrnOrChemical(queryName,queryName,pageable);
+    public Page<ToxDTO> getByQueryName(@PathVariable String queryName, Pageable pageable) {
+        Page<Tox> res = toxRepository.findByCasrnOrChemical(queryName,queryName,pageable);
+        List<ToxDTO> toxDTOS = judge(res.getContent());
+        return PageUtil.listConvertToPageWithOnePage(toxDTOS, pageable, res.getTotalElements());
+    }
+
+    @GetMapping("/all")
+    public Page<ToxDTO> findAll(Pageable pageable){
+        Page<Tox> toxList = toxRepository.findAll(pageable);
+        List<ToxDTO> toxDTOS = judge(toxList.getContent());
+        return PageUtil.listConvertToPageWithOnePage(toxDTOS, pageable, toxList.getTotalElements());
+    }
+
+    private List<ToxDTO> judge(List<Tox> toxList) {
+        List<Bioassay> bioassays = bioassayRepository.findAll();
+        Set set = bioassays.stream().map(b->b.getBioassayName()+b.getEffect()).collect(Collectors.toSet());
+        return toxList.stream().map(t->{
+            ToxDTO toxDTO = new ToxDTO();
+            BeanUtils.copyProperties(t, toxDTO);
+            String[] bioNames = t.getBioassay().split(",");
+            for(int i = 0; i < bioNames.length; i++) {
+                if(set.contains(bioNames[i]+t.getEffect())) {
+                    toxDTO.setHasRes(true);
+                    break;
+                }
+            }
+            return toxDTO;
+        }).collect(Collectors.toList());
     }
 
     @PostMapping("/diagnose")
