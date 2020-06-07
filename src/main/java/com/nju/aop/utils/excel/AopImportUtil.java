@@ -348,6 +348,8 @@ public class AopImportUtil {
         //update aop.chain set name = (select title from aop.event where id = event_id)
         String sql = "update chain set name = (select title from event where id = event_id)";
         jdbcTemplate.execute(sql);
+        sql = "update chain set chinese = (select chinese from event where id = event_id)";
+        jdbcTemplate.execute(sql);
 
     }
 
