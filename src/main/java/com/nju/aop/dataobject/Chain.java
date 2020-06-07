@@ -31,4 +31,5 @@ public class Chain {
 
     private String name;
 
+    private String chinese;
 }
