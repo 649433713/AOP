@@ -81,9 +81,9 @@ public class GraphController {
            if(StringUtils.equals(event.getCancer(),ao.getCancer())){
                score += ratioInfo.getCancer();
            }
-           if(StringUtils.equals(event.getSurvivalRates(),ao.getSurvivalRates())){
-               score += ratioInfo.getSurvivalRates();
-           }
+//           if(StringUtils.equals(event.getSurvivalRates(),ao.getSurvivalRates())){
+//               score += ratioInfo.getSurvivalRates();
+//           }
            if(StringUtils.equals(event.getLevel(),ao.getLevel())){
                score += ratioInfo.getLevel();
            }
