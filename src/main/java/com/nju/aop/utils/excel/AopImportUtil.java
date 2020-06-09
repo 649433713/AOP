@@ -3,6 +3,7 @@ package com.nju.aop.utils.excel;
 import com.nju.aop.dataobject.*;
 import com.nju.aop.dataobject.importTempVo.BioassayVO;
 import com.nju.aop.dataobject.importTempVo.CasEtc;
+import com.nju.aop.dataobject.importTempVo.ToxVo;
 import com.nju.aop.repository.*;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,11 +16,13 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.nju.aop.constant.SheetNameConstant.*;
@@ -150,12 +153,15 @@ public class AopImportUtil {
             }
         }).collect(Collectors.toList());
 
+        saveToxes(list);
+    }
+
+    private void saveToxes(List<Tox> list) {
         String sql = "insert into tox (ac50, assay_name, bioassay, casrn, chemical, effect, intended_target_family, tox_id) values (?, ?, ?, ?, ?, ?, ?, ?)";
-        List<Tox> finalList = list;
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
-                Tox tox = finalList.get(i);
+                Tox tox = list.get(i);
                 preparedStatement.setDouble(1, tox.getAc50());
                 preparedStatement.setString(2,tox.getAssayName());
                 preparedStatement.setString(3,tox.getBioassay());
@@ -168,7 +174,7 @@ public class AopImportUtil {
 
             @Override
             public int getBatchSize() {
-                return finalList.size();
+                return list.size();
             }
         });
     }
@@ -280,9 +286,9 @@ public class AopImportUtil {
 
     public static void main(String[] args) {
         ///Users/yinywf/Downloads
-        String path = "/Users/yinywf/Downloads/AOP汇总表.xlsx";
+        String path = "/Users/yinywf/Downloads/b7e4598b0a9937f5.xlsx";
         try {
-            new AopImportUtil().insertAopExcel(new File(path), path.substring(path.indexOf(".xls")));
+            new AopImportUtil().insertToxExcel(new File(path), path.substring(path.indexOf(".xls")));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -493,7 +499,7 @@ public class AopImportUtil {
             }
         });
     }
-    public void insertToxExcel(File file, String name) throws IOException {
+    public void insertToxExcel(File file, String name) throws Exception {
         Workbook workbook = ExcelUtil.getWorkBoot(new FileInputStream(file), name);
 
         Iterator<Sheet> iterator = workbook.sheetIterator();
@@ -503,7 +509,10 @@ public class AopImportUtil {
 
             //todo: 判断sheet名字调用插入的方法...
             //要求sheet中表头只有一行，表头名称与实体类字段名对应   或  与字段名上@ExcelCell中的名称对应
+            toxRepository.deleteAllInBatch();
+            List<ToxVo> toxVos = ExcelUtil.readExcelToEntity(ToxVo.class, new FileInputStream(file), name, 0);
 
+            saveToxes(toxVos.stream().map(ToxVo::getTox).collect(Collectors.toList()));
         }
     }
 
