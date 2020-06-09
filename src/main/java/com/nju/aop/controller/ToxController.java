@@ -63,7 +63,7 @@ public class ToxController {
     private List<ToxDTO> judge(List<Tox> toxList) {
         List<Bioassay> bioassays = bioassayRepository.findAll();
         Set set = bioassays.stream().map(b->b.getBioassayName()+b.getEffect()).collect(Collectors.toSet());
-        return toxList.stream().map(t->{
+        List<ToxDTO> list = toxList.stream().map(t->{
             ToxDTO toxDTO = new ToxDTO();
             BeanUtils.copyProperties(t, toxDTO);
             String[] bioNames = t.getBioassay().split(",");
@@ -75,6 +75,15 @@ public class ToxController {
             }
             return toxDTO;
         }).collect(Collectors.toList());
+        Comparator<ToxDTO> comparator = (tox1, tox2) -> {
+            if(tox1.isHasRes() ^ tox2.isHasRes()) {
+                return tox1.isHasRes()?-1:1;
+            }else {
+                return 0;
+            }
+        };
+        list.sort(comparator);
+        return list;
     }
 
     @PostMapping("/diagnose")
