@@ -5,7 +5,9 @@ import com.nju.aop.dto.EventWithDistance;
 import com.nju.aop.repository.*;
 import com.nju.aop.dto.KEAndAO;
 import com.nju.aop.utils.ExampleMatcherUtil;
+import com.nju.aop.vo.ChainVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.Even;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import scala.Int;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -317,5 +320,26 @@ public class EventController {
         }
         events.addAll(eventRepository.findAllById(eventIDs));
         return events;
+    }
+
+    @GetMapping("/findByAopId/{aopId}")
+    public List<ChainVO> findByAOPId(@PathVariable Integer aopId) {
+        List<Chain> chains = chainRepository.findByAopId(aopId);
+        List<Integer> eventIds = chains.stream().map(Chain::getEventId).collect(Collectors.toList());
+        Map<Integer, Event> eventMap = eventRepository.findAllById(eventIds)
+                .stream().collect(Collectors.toMap(Event::getId,e -> e));
+
+        List<ChainVO> ret = new ArrayList<>();
+        chains.forEach(e -> {
+            Event event = eventMap.get(e.getEventId());
+            if(event != null){
+                ChainVO chainVO = new ChainVO(event);
+                chainVO.setType(e.getType());
+                chainVO.setAopId(e.getAopId());
+                ret.add(chainVO);
+            }
+        });
+
+        return ret;
     }
 }
