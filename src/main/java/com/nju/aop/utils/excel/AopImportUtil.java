@@ -607,7 +607,7 @@ public class AopImportUtil {
         Iterator<Sheet> iterator = workbook.sheetIterator();
         Sheet sheet = iterator.next();
         String sheetName = sheet.getSheetName();
-        toxRepository.deleteAllInBatch();
+        toxCountRepository.deleteAllInBatch();
         List<Tox101CountVO> toxVos = ExcelUtil
             .readExcelToEntity(Tox101CountVO.class, new FileInputStream(file), name, 1);
         List<ToxCount> saveList = new ArrayList<>();
