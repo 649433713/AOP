@@ -2,13 +2,15 @@ package com.nju.aop.controller;
 
 import com.nju.aop.dataobject.*;
 import com.nju.aop.dto.ChemicalInfo;
+import com.nju.aop.dto.KEAndAO;
 import com.nju.aop.dto.ToxDTO;
-import com.nju.aop.repository.BioassayRepository;
-import com.nju.aop.repository.ChainRepository;
-import com.nju.aop.repository.ChemicalBriefRepository;
-import com.nju.aop.repository.ToxRepository;
+import com.nju.aop.repository.*;
+import com.nju.aop.service.ChemicalService;
 import com.nju.aop.utils.PageUtil;
+import com.nju.aop.vo.ToxCollectVO;
+import com.nju.aop.vo.ToxReportVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -40,17 +42,90 @@ public class ToxController {
     @Autowired
     private ToxRepository toxRepository;
     @Autowired
+    private ToxCountRepository toxCountRepository;
+    @Autowired
     private ChainRepository chainRepository;
     @Autowired
     private BioassayRepository bioassayRepository;
     @Autowired
     private ChemicalBriefRepository chemicalBriefRepository;
+    @Autowired
+    private ChemicalService chemicalService;
 
     @GetMapping("/{queryName}")
     public Page<ToxDTO> getByQueryName(@PathVariable String queryName, Pageable pageable) {
         Page<Tox> res = toxRepository.findByCasrnOrChemical(queryName,queryName,pageable);
         List<ToxDTO> toxDTOS = judge(res.getContent());
         return PageUtil.listConvertToPageWithOnePage(toxDTOS, pageable, res.getTotalElements());
+    }
+
+    @GetMapping("/collect/{queryName}")
+    public List<ToxCollectVO> toxCollect(@PathVariable String queryName) {
+        List<Tox> toxes = toxRepository.findByCasrnOrChemical(queryName,queryName)
+                .stream().filter(e -> e.getAc50() > 0).collect(Collectors.toList());
+        List<ToxCollectVO> ret = new ArrayList<>();
+        toxes.forEach(e -> {
+            List<KEAndAO> keAndAOS = chemicalService.findByBioassay(e.getBioassay(),e.getEffect());
+            keAndAOS.forEach(keAndAO -> {
+                ToxCollectVO toxCollectVO = new ToxCollectVO();
+                toxCollectVO.setTox(e);
+                toxCollectVO.setAOs(keAndAO.getAOs());
+                toxCollectVO.setKE(keAndAO.getKE());
+                ret.add(toxCollectVO);
+            });
+
+        });
+        if(toxes.size() > 0) {
+            chemicalService.saveToxExcel(ret, toxes.get(0).getCasrn(), toxes.get(0).getChemical());
+        }
+        return ret;
+    }
+
+    @GetMapping("/report/{queryName}")
+    public ToxReportVO toxReport(@PathVariable String queryName){
+        Map<String,List<ToxCount>> toxCountMap = toxCountRepository.findByCasrnOrChemical(queryName,queryName)
+                .stream().collect(Collectors.groupingBy(ToxCount::getIntendedTargetFamily));
+        Map<String,List<Tox>> toxMap = toxRepository.findByCasrnOrChemical(queryName,queryName)
+                .stream().collect(Collectors.groupingBy(Tox::getIntendedTargetFamily));
+        ToxReportVO ret = new ToxReportVO();
+        toxCountMap.forEach((target,toxCount) -> {
+            if(Objects.isNull(ret.getChemical())){
+                ret.setChemical(toxCount.get(0).getChemical());
+            }
+            ToxReportVO.TargetFamilyVO targetFamilyVO = new ToxReportVO.TargetFamilyVO();
+            targetFamilyVO.setIntendedTargetFamily(target);
+            toxCount.forEach(count -> {
+                switch (count.getAlive()){
+                    case "有活性总生物检测数":
+                        targetFamilyVO.setPositive(count.getCount());
+                        break;
+                    case "无活性总生物检测数": case "无活性":
+                        targetFamilyVO.setNegative(count.getCount());
+                        break;
+                    case "有活性":
+                        targetFamilyVO.setPositive(count.getCount());
+                        List<Tox> toxes = toxMap.getOrDefault(target,new ArrayList<>());
+                        toxes.forEach(tox -> {
+                            if(tox.getAc50() != 0) {
+                                if (!Objects.isNull(targetFamilyVO.getHighestAC())) {
+                                    targetFamilyVO.setHighestAC(Math.max(targetFamilyVO.getHighestAC(), tox.getAc50()));
+                                } else {
+                                    targetFamilyVO.setHighestAC(tox.getAc50());
+                                }
+                                if (!Objects.isNull(targetFamilyVO.getLowestAC())) {
+                                    targetFamilyVO.setLowestAC(Math.min(targetFamilyVO.getLowestAC(), tox.getAc50()));
+                                } else {
+                                    targetFamilyVO.setLowestAC(tox.getAc50());
+                                }
+                            }
+                        });
+                        break;
+                }
+            });
+            ret.getTargetFamilyVOList().add(targetFamilyVO);
+
+        });
+        return ret;
     }
 
     @GetMapping("/all")

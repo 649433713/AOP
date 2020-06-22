@@ -35,4 +35,6 @@ public interface ToxRepository extends JpaRepository<Tox, Integer> {
     List<Tox> findByBioassayLike(String bioassay);
 
     List<Tox> findByIntendedTargetFamily(String string);
+
+    List<Tox> findByCasrnOrChemical(String casrn, String chemical);
 }

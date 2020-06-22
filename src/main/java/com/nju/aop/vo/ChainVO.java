@@ -22,6 +22,7 @@ public class ChainVO {
     private String lifeCycle;
     private String level;
     private String type;
+    private String sex;
     public ChainVO(Event e) {
         this.eventId = e.getId();
         this.cancer = e.getCancer();
@@ -31,5 +32,6 @@ public class ChainVO {
         this.organ = e.getOrgan();
         this.lifeCycle = e.getLifeCycle();
         this.level = e.getLevel();
+        this.sex = e.getSex();
     }
 }

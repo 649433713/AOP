@@ -1,6 +1,8 @@
 package com.nju.aop.service;
 
 import com.nju.aop.dto.ChemicalDTO;
+import com.nju.aop.dto.KEAndAO;
+import com.nju.aop.vo.ToxCollectVO;
 
 import java.util.List;
 
@@ -20,4 +22,9 @@ public interface ChemicalService {
 
     List<ChemicalDTO> findByCas(String cas);
 
+    List<KEAndAO> findByBioassay(String bioassay, String effect);
+
+    void saveExcel(List<KEAndAO> list, String bioassay, String effect);
+
+    void saveToxExcel(List<ToxCollectVO> ret, String casrn, String chemical);
 }
