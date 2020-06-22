@@ -1,19 +1,48 @@
 package com.nju.aop.utils.excel;
 
-import com.nju.aop.dataobject.*;
+import static com.nju.aop.constant.SheetNameConstant.AOP;
+import static com.nju.aop.constant.SheetNameConstant.CHAIN;
+import static com.nju.aop.constant.SheetNameConstant.CHEMICAL;
+import static com.nju.aop.constant.SheetNameConstant.EDGE;
+import static com.nju.aop.constant.SheetNameConstant.EVENT;
+import static com.nju.aop.constant.SheetNameConstant.MIE;
+
+import com.nju.aop.dataobject.Aop;
+import com.nju.aop.dataobject.Bioassay;
+import com.nju.aop.dataobject.Biodetection;
+import com.nju.aop.dataobject.Chain;
+import com.nju.aop.dataobject.Chemical;
+import com.nju.aop.dataobject.ChemicalAop;
+import com.nju.aop.dataobject.ChemicalBrief;
+import com.nju.aop.dataobject.ChemicalCas;
+import com.nju.aop.dataobject.ChemicalEvent;
+import com.nju.aop.dataobject.Edge;
+import com.nju.aop.dataobject.Event;
+import com.nju.aop.dataobject.Mie;
+import com.nju.aop.dataobject.MieInteractionType;
+import com.nju.aop.dataobject.Tox;
+import com.nju.aop.dataobject.ToxCount;
+import com.nju.aop.dataobject.Type101Entity;
 import com.nju.aop.dataobject.importTempVo.BioassayVO;
 import com.nju.aop.dataobject.importTempVo.CasEtc;
+import com.nju.aop.dataobject.importTempVo.Tox101CountVO;
+import com.nju.aop.dataobject.importTempVo.Tox101VO;
 import com.nju.aop.dataobject.importTempVo.ToxVo;
-import com.nju.aop.repository.*;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
+import com.nju.aop.repository.AopRepository;
+import com.nju.aop.repository.BioassayRepository;
+import com.nju.aop.repository.BiodetectionRepository;
+import com.nju.aop.repository.ChainRepository;
+import com.nju.aop.repository.ChemicalAopRepository;
+import com.nju.aop.repository.ChemicalBriefRepository;
+import com.nju.aop.repository.ChemicalCasRepository;
+import com.nju.aop.repository.ChemicalEventRepository;
+import com.nju.aop.repository.ChemicalRepository;
+import com.nju.aop.repository.EdgeRepository;
+import com.nju.aop.repository.EventRepository;
+import com.nju.aop.repository.MieRepository;
+import com.nju.aop.repository.ToxCountRepository;
+import com.nju.aop.repository.ToxRepository;
+import com.nju.aop.repository.Type101Repository;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -23,9 +52,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static com.nju.aop.constant.SheetNameConstant.*;
+import javafx.util.Pair;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * @author yinywf
@@ -78,6 +117,11 @@ public class AopImportUtil {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private Type101Repository type101Repository;
+
+    @Autowired
+    private ToxCountRepository toxCountRepository;
 
     @Transactional
     public void insertChains(String path,String name) throws Exception {
@@ -157,7 +201,7 @@ public class AopImportUtil {
     }
 
     private void saveToxes(List<Tox> list) {
-        String sql = "insert into tox (ac50, assay_name, bioassay, casrn, chemical, effect, intended_target_family, tox_id) values (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "insert into tox (ac50, assay_name, bioassay, casrn, chemical, effect, intended_target_family, tox_id, chemical_chinese, chemical_code) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
@@ -170,6 +214,8 @@ public class AopImportUtil {
                 preparedStatement.setString(6,tox.getEffect());
                 preparedStatement.setString(7,tox.getIntendedTargetFamily());
                 preparedStatement.setString(8,tox.getToxId());
+                preparedStatement.setString(9,tox.getChemicalChinese());
+                preparedStatement.setString(10,tox.getChemicalCode());
             }
 
             @Override
@@ -285,10 +331,10 @@ public class AopImportUtil {
     }
 
     public static void main(String[] args) {
-        ///Users/yinywf/Downloads
-        String path = "/Users/yinywf/Downloads/b7e4598b0a9937f5.xlsx";
+        ///Users/yinywf/Downloads /Users/wangfan/Downloads
+        String path = "/Users/wangfan/Downloads/101个化学品生物检测信息.xlsx";
         try {
-            new AopImportUtil().insertToxExcel(new File(path), path.substring(path.indexOf(".xls")));
+            new AopImportUtil().insertTox101Excel(new File(path), path.substring(path.indexOf(".xls")));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -514,6 +560,75 @@ public class AopImportUtil {
 
             saveToxes(toxVos.stream().map(ToxVo::getTox).collect(Collectors.toList()));
         }
+    }
+
+    public void insertTox101Excel(File file, String name) throws Exception {
+        Workbook workbook = ExcelUtil.getWorkBoot(new FileInputStream(file), name);
+
+        List<Type101Entity> type101Entities = type101Repository.findAll();
+        Map<Integer, Type101Entity> type101Map = type101Entities.stream()
+            .collect(Collectors.toMap(Type101Entity::getId,
+                Function.identity()));
+        Iterator<Sheet> iterator = workbook.sheetIterator();
+        Sheet sheet = iterator.next();
+        String sheetName = sheet.getSheetName();
+        toxRepository.deleteAllInBatch();
+        List<Tox101VO> toxVos = ExcelUtil
+            .readExcelToEntity(Tox101VO.class, new FileInputStream(file), name, 0);
+        List<Tox> saveList = new ArrayList<>();
+        for (Tox101VO tox101VO : toxVos) {
+            Tox demo = tox101VO.getTox();
+
+            List<Pair<Integer, Double>> pairs = tox101VO.getAc();
+            if (!CollectionUtils.isEmpty(pairs)) {
+                for (Pair<Integer, Double> pair : pairs) {
+                    Type101Entity type101Entity = type101Map.get(pair.getKey());
+                    Tox temp = new Tox();
+                    BeanUtils.copyProperties(demo, temp);
+                    temp.setAc50(pair.getValue());
+                    temp.setCasrn(type101Entity.getCas());
+                    temp.setChemical(type101Entity.getEnglish());
+                    temp.setChemicalChinese(type101Entity.getChinese());
+                    temp.setChemicalCode(type101Entity.getCode());
+                    saveList.add(temp);
+                }
+            }
+        }
+        saveToxes(saveList);
+    }
+
+    public void insertToxCountExcel(File file, String name) throws Exception {
+        Workbook workbook = ExcelUtil.getWorkBoot(new FileInputStream(file), name);
+
+        List<Type101Entity> type101Entities = type101Repository.findAll();
+        Map<Integer, Type101Entity> type101Map = type101Entities.stream()
+            .collect(Collectors.toMap(Type101Entity::getId,
+                Function.identity()));
+        Iterator<Sheet> iterator = workbook.sheetIterator();
+        Sheet sheet = iterator.next();
+        String sheetName = sheet.getSheetName();
+        toxRepository.deleteAllInBatch();
+        List<Tox101CountVO> toxVos = ExcelUtil
+            .readExcelToEntity(Tox101CountVO.class, new FileInputStream(file), name, 1);
+        List<ToxCount> saveList = new ArrayList<>();
+        for (Tox101CountVO tox101VO : toxVos) {
+
+            List<Pair<Integer, Integer>> pairs = tox101VO.getAc();
+            if (!CollectionUtils.isEmpty(pairs)) {
+                for (Pair<Integer, Integer> pair : pairs) {
+                    Type101Entity type101Entity = type101Map.get(pair.getKey());
+                    ToxCount temp = new ToxCount();
+                    BeanUtils.copyProperties(tox101VO, temp);
+                    temp.setCount(pair.getValue());
+                    temp.setCasrn(type101Entity.getCas());
+                    temp.setChemical(type101Entity.getEnglish());
+                    temp.setChemicalChinese(type101Entity.getChinese());
+                    saveList.add(temp);
+                }
+            }
+        }
+
+        toxCountRepository.saveAll(saveList);
     }
 
 }

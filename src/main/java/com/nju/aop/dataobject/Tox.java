@@ -1,6 +1,8 @@
 package com.nju.aop.dataobject;
 
 import com.nju.aop.utils.excel.ExcelCell;
+import javax.persistence.Column;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,7 @@ import javax.persistence.Id;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "tox", schema = "aop")
 public class Tox {
     //assay_name, bioassay, casrn, chemical, effect, intended_target_family
     @Id
@@ -26,6 +29,10 @@ public class Tox {
     private String toxId;
     private String casrn;
     private String chemical;
+    @Column(name = "chemical_chinese")
+    private String chemicalChinese;
+    @Column(name = "chemical_code")
+    private String chemicalCode;
     @ExcelCell("Assay.name")
     private String assayName;
     private String bioassay;
