@@ -18,9 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -104,21 +102,23 @@ public class ToxController {
                         break;
                     case "有活性":
                         targetFamilyVO.setPositive(count.getCount());
-                        List<Tox> toxes = toxMap.getOrDefault(target,new ArrayList<>());
-                        toxes.forEach(tox -> {
-                            if(tox.getAc50() != 0) {
-                                if (!Objects.isNull(targetFamilyVO.getHighestAC())) {
-                                    targetFamilyVO.setHighestAC(Math.max(targetFamilyVO.getHighestAC(), tox.getAc50()));
-                                } else {
-                                    targetFamilyVO.setHighestAC(tox.getAc50());
+                        if(count.getCount() > 0) {
+                            List<Tox> toxes = toxMap.getOrDefault(target, new ArrayList<>());
+                            toxes.forEach(tox -> {
+                                if (tox.getAc50() != 0) {
+                                    if (!Objects.isNull(targetFamilyVO.getHighestAC())) {
+                                        targetFamilyVO.setHighestAC(Math.max(targetFamilyVO.getHighestAC(), tox.getAc50()));
+                                    } else {
+                                        targetFamilyVO.setHighestAC(tox.getAc50());
+                                    }
+                                    if (!Objects.isNull(targetFamilyVO.getLowestAC())) {
+                                        targetFamilyVO.setLowestAC(Math.min(targetFamilyVO.getLowestAC(), tox.getAc50()));
+                                    } else {
+                                        targetFamilyVO.setLowestAC(tox.getAc50());
+                                    }
                                 }
-                                if (!Objects.isNull(targetFamilyVO.getLowestAC())) {
-                                    targetFamilyVO.setLowestAC(Math.min(targetFamilyVO.getLowestAC(), tox.getAc50()));
-                                } else {
-                                    targetFamilyVO.setLowestAC(tox.getAc50());
-                                }
-                            }
-                        });
+                            });
+                        }
                         break;
                 }
             });
@@ -143,7 +143,7 @@ public class ToxController {
             BeanUtils.copyProperties(t, toxDTO);
             String[] bioNames = t.getBioassay().split(",");
             for(int i = 0; i < bioNames.length; i++) {
-                if(set.contains(bioNames[i]+t.getEffect())) {
+                if(toxDTO.getAc50() > 0 && set.contains(bioNames[i]+t.getEffect())) {
                     toxDTO.setHasRes(true);
                     break;
                 }

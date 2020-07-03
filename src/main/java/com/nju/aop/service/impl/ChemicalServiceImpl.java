@@ -444,7 +444,7 @@ public class ChemicalServiceImpl implements ChemicalService {
             }
         }
 
-        String name = "casrn"+"-"+"chemical"+".xlsx";
+        String name = casrn+"-"+chemical+".xlsx";
         String filePath = File.separator + "tmp" + File.separator + "resource" + File.separator + "static" + File.separator + "resultFiles" + File.separator + name;
 //        String filePath = "E:\\resultFiles\\"+name;
         File file = new File(filePath);
