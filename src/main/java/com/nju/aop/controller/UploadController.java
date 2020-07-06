@@ -111,9 +111,20 @@ public class UploadController {
     @RequestMapping(value = "/aop_test",method = RequestMethod.GET)
     public void uploadAopTest(){
 
-        String path = "/Users/yinywf/Downloads/AOP汇总表.xlsx";
+        String path = "/Users/wangfan/Downloads/101个化学品生物检测信息 2.xlsx";
         try {
-            aopImportUtil.insertAopExcel(new File(path), path.substring(path.indexOf(".xls")));
+            aopImportUtil.insertTox101Excel(new File(path), path.substring(path.indexOf(".xls")));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @RequestMapping(value = "/tox_test",method = RequestMethod.GET)
+    public void uploadToxTest(){
+
+        String path = "/Users/wangfan/Downloads/101个化学品生物检测信息 2.xlsx";
+        try {
+            aopImportUtil.insertToxCountExcel(new File(path), path.substring(path.indexOf(".xls")));
         } catch (Exception e) {
             e.printStackTrace();
         }

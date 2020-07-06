@@ -22,10 +22,27 @@ public class DownloadController {
     public String downLoad(HttpServletResponse response){
         String filename="归档.zip";
         String filePath = "/usr/project/aop" ;
+        downLoad(filename, filePath, response);
+        return null;
+    }
+
+    @GetMapping("/instruction")
+    public String downLoadInstruction(HttpServletResponse response){
+        String filename = "AOP用户使用说明.pdf";
+        String filePath = "/usr/project/aop" ;
+        downLoad(filename, filePath, response);
+        return null;
+    }
+
+    private void downLoad(String filename, String filePath, HttpServletResponse response) {
         File file = new File(filePath + "/" + filename);
-        if(file.exists()){ //判断文件父目录是否存在
+        if (file.exists()) { //判断文件父目录是否存在
             response.setContentType("application/force-download");
-            response.setHeader("Content-Disposition", "attachment;fileName=" + filename);
+            try {
+                response.setHeader("Content-Disposition", "attachment;fileName=" + java.net.URLEncoder.encode(filename, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
 
             byte[] buffer = new byte[1024];
             FileInputStream fis = null; //文件输入流
@@ -37,24 +54,18 @@ public class DownloadController {
                 fis = new FileInputStream(file);
                 bis = new BufferedInputStream(fis);
                 int i = bis.read(buffer);
-                while(i != -1){
+                while (i != -1) {
                     os.write(buffer);
                     i = bis.read(buffer);
                 }
+                bis.close();
+                fis.close();
 
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             System.out.println("----------file download" + filename);
-            try {
-                bis.close();
-                fis.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
         }
-        return null;
     }
 }
