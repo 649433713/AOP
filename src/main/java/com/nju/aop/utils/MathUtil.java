@@ -6,6 +6,7 @@ package com.nju.aop.utils;
  */
 public class MathUtil {
 
+    public static final Integer MAX = 1000000;
     private static final Double MONEY_RANGE = 0.01;
 
     /**

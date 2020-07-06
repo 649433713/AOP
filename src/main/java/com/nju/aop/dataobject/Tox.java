@@ -40,6 +40,7 @@ public class Tox {
     @ExcelCell("intended_target_family")
     private String intendedTargetFamily;
     private Double ac50;
+    private Integer hasRes;
 
 
 }
