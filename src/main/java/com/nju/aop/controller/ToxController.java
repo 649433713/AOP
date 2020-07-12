@@ -150,14 +150,14 @@ public class ToxController {
             }
             return toxDTO;
         }).collect(Collectors.toList());
-        Comparator<ToxDTO> comparator = (tox1, tox2) -> {
-            if(tox1.isHasRes() ^ tox2.isHasRes()) {
-                return tox1.isHasRes()?-1:1;
-            }else {
-                return 0;
-            }
-        };
-        list.sort(comparator);
+//        Comparator<ToxDTO> comparator = (tox1, tox2) -> {
+//            if(tox1.isHasRes() ^ tox2.isHasRes()) {
+//                return tox1.isHasRes()?-1:1;
+//            }else {
+//                return 0;
+//            }
+//        };
+//        list.sort(comparator);
         return list;
     }
 
